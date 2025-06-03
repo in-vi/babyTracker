@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Daily Weight Tracker</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1c1e21;
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+        }
+
+        .input-group {
+            margin-bottom: 18px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #606770;
+        }
+
+        .input-group input[type="number"],
+        .input-group input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccd0d5;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1em;
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,.25);
+        }
+
+
+        button#addWeightBtn {
+            width: 100%;
+            padding: 12px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.05em;
+            font-weight: 600;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        button#addWeightBtn:hover {
+            background-color: #0056b3;
+        }
+        button#addWeightBtn:active {
+            background-color: #004085;
+        }
+
+
+        #weightList {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 30px;
+        }
+
+        #weightList li {
+            background-color: #f7f7f7;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #e0e0e0;
+        }
+        #weightList li .entry-details {
+            flex-grow: 1;
+        }
+        #weightList li .date {
+            font-size: 0.9em;
+            color: #555;
+            display: block;
+            margin-bottom: 4px;
+        }
+        #weightList li .weight {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        #weightList li button.delete-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-size: 0.85em;
+            cursor: pointer;
+            width: auto;
+            margin-left: 10px;
+            transition: background-color 0.2s ease;
+        }
+        #weightList li button.delete-btn:hover {
+            background-color: #c0392b;
+        }
+        .loading, .no-entries {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #606770;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Daily Weight</h1>
+
+        <div class="input-group">
+            <label for="weightInput">Weight (<span id="weight_unit_input_label">kg</span>):</label>
+            <input type="number" id="weightInput" step="0.1" placeholder="e.g., 70.5" required>
+        </div>
+
+        <div class="input-group">
+            <label for="dateInput">Date:</label>
+            <input type="date" id="dateInput" required>
+        </div>
+
+        <button id="addWeightBtn">Add Entry</button>
+
+        <h2>History</h2>
+        <div id="loadingMessage" class="loading">Loading entries...</div>
+        <ul id="weightList">
+            <!-- Weight entries will be listed here -->
+        </ul>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        // IMPORTANT: Replace with your Firebase project's configuration from "babyTracker"
+        const firebaseConfig = {
+          apiKey: "AIzaSyAegWMXimrC_5_WpnDyuconRNrq5Wp08kw", // Make sure this is YOUR actual key
+          authDomain: "babytracker-f88a2.firebaseapp.com",
+          projectId: "babytracker-f88a2",
+          storageBucket: "babytracker-f88a2.firebasestorage.app",
+          messagingSenderId: "582010889847",
+          appId: "1:582010889847:web:7ad86cb3fdc1faafa8c872"
+        };
+        
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+        // Name your collection for weights, e.g., "babyWeights" or "dailyHealthMetrics"
+        const weightsCollection = db.collection("babyWeights");
+
+        // DOM Elements
+        const weightInput = document.getElementById('weightInput');
+        const dateInput = document.getElementById('dateInput');
+        const addWeightBtn = document.getElementById('addWeightBtn');
+        const weightList = document.getElementById('weightList');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const weightUnitLabel = document.getElementById('weight_unit_input_label');
+        const WEIGHT_UNIT = "kg"; // Or "lbs" - ensure consistency
+
+        dateInput.valueAsDate = new Date();
+        weightUnitLabel.textContent = WEIGHT_UNIT;
+
+        const addWeight = async () => {
+            const weight = parseFloat(weightInput.value);
+            const date = dateInput.value;
+
+            if (isNaN(weight) || weight <= 0) {
+                alert("Please enter a valid weight.");
+                weightInput.focus();
+                return;
+            }
+            if (!date) {
+                alert("Please select a date.");
+                dateInput.focus();
+                return;
+            }
+
+            addWeightBtn.disabled = true;
+            addWeightBtn.textContent = "Adding...";
+
+            try {
+                await weightsCollection.add({
+                    weight: weight,
+                    date: date,
+                    unit: WEIGHT_UNIT,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                weightInput.value = '';
+                console.log("Weight added successfully!");
+            } catch (error) {
+                console.error("Error adding weight: ", error);
+                alert("Failed to add weight. Check console.");
+            } finally {
+                addWeightBtn.disabled = false;
+                addWeightBtn.textContent = "Add Entry";
+            }
+        };
+
+        const deleteWeight = async (id) => {
+            if (!confirm("Are you sure you want to delete this entry?")) return;
+            try {
+                await weightsCollection.doc(id).delete();
+                console.log("Weight entry deleted:", id);
+            } catch (error) {
+                console.error("Error deleting weight: ", error);
+                alert("Failed to delete weight. Check console.");
+            }
+        };
+
+        const loadWeights = () => {
+            loadingMessage.style.display = 'block';
+            weightList.innerHTML = '';
+
+            weightsCollection.orderBy("date", "desc").orderBy("createdAt", "desc")
+            .onSnapshot((querySnapshot) => {
+                weightList.innerHTML = '';
+                if (querySnapshot.empty) {
+                    weightList.innerHTML = '<li class="no-entries">No weights recorded yet.</li>';
+                } else {
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const li = document.createElement('li');
+                        
+                        const entryDetailsDiv = document.createElement('div');
+                        entryDetailsDiv.className = 'entry-details';
+
+                        const dateSpan = document.createElement('span');
+                        dateSpan.className = 'date';
+                        dateSpan.textContent = formatDate(data.date);
+                        
+                        const weightSpan = document.createElement('span');
+                        weightSpan.className = 'weight';
+                        weightSpan.textContent = `${data.weight} ${data.unit || WEIGHT_UNIT}`;
+
+                        entryDetailsDiv.appendChild(dateSpan);
+                        entryDetailsDiv.appendChild(weightSpan);
+
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'delete-btn';
+                        deleteBtn.textContent = 'Delete';
+                        deleteBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            deleteWeight(doc.id);
+                        };
+
+                        li.appendChild(entryDetailsDiv);
+                        li.appendChild(deleteBtn);
+                        weightList.appendChild(li);
+                    });
+                }
+                loadingMessage.style.display = 'none';
+            }, (error) => {
+                console.error("Error loading weights: ", error);
+                weightList.innerHTML = '<li>Error loading weights. Check console.</li>';
+                loadingMessage.style.display = 'none';
+            });
+        };
+
+        function formatDate(dateString) {
+            const parts = dateString.split('-');
+            const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return dateObj.toLocaleDateString(undefined, options);
+        }
+
+        addWeightBtn.addEventListener('click', addWeight);
+        weightInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                addWeight();
+            }
+        });
+
+        loadWeights();
+    </script>
+</body>
+</html>
