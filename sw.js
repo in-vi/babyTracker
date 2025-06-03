@@ -1,86 +1,83 @@
-const CACHE_NAME = 'weight-tracker-cache-v1';
-const urlsToCache = [
-  './', // Alias for index.html
-  './index.html',
-  // Add any other essential assets like CSS or JS if they were separate files
-  // './style.css',
-  // './app.js',
-  './icon-192x192.png',
-  './icon-512x512.png'
+// In your sw.js
+
+const CACHE_NAME = 'weighttrack-cache-v1'; // CHANGE THIS VERSION WHEN YOU UPDATE SW OR CRITICAL ASSETS
+const ASSETS_TO_CACHE = [
+    // DO NOT include '/' or './index.html' here if you want it to update immediately
+    // OR use a network-first strategy for them.
+    './manifest.json',
+    './icon-192x192.png',
+    // Add other static assets like specific CSS, JS libraries if they don't change often
+    'https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js',
+    'https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js',
+    'https://cdn.jsdelivr.net/npm/chart.js'
 ];
 
-// Install event: open cache and add core files
-self.addEventListener('install', event => {
+self.addEventListener('install', (event) => {
+  console.log('[SW] Install event');
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
+      .then((cache) => {
+        console.log('[SW] Precaching App Shell:', ASSETS_TO_CACHE);
+        return cache.addAll(ASSETS_TO_CACHE);
+      })
+      .then(() => {
+        // Force the waiting service worker to become the active service worker.
+        return self.skipWaiting();
       })
   );
-  self.skipWaiting(); // Force the waiting service worker to become the active service worker
 });
 
-// Activate event: clean up old caches
-self.addEventListener('activate', event => {
+self.addEventListener('activate', (event) => {
+  console.log('[SW] Activate event');
   event.waitUntil(
-    caches.keys().then(cacheNames => {
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map(cache => {
-          if (cache !== CACHE_NAME) {
-            console.log('Deleting old cache:', cache);
-            return caches.delete(cache);
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('[SW] Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
           }
         })
       );
+    }).then(() => {
+      // Tell the active service worker to take control of the page immediately.
+      return self.clients.claim();
     })
   );
-  return self.clients.claim(); // Take control of uncontrolled clients
 });
 
-// Fetch event: serve from cache if available, otherwise fetch from network
-self.addEventListener('fetch', event => {
-  // We only want to cache GET requests.
-  if (event.request.method !== 'GET') {
+self.addEventListener('fetch', (event) => {
+  // For HTML navigation requests, always go to network first.
+  // This ensures you get the latest index.html.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .catch(() => {
+          // Optional: Fallback to a cached offline page if network fails
+          // return caches.match('/offline.html');
+          // For development, you might prefer it to just fail if network is down
+          // or return a previously cached index.html as a last resort if you decide to cache it.
+          console.warn('[SW] Network fetch for navigation failed. No offline fallback configured for dev.');
+        })
+    );
     return;
   }
 
-  // For Firebase requests, always go to the network
-  if (event.request.url.includes('firestore.googleapis.com') || event.request.url.includes('firebaseapp.com')) {
-    event.respondWith(fetch(event.request));
-    return;
-  }
-
+  // For other requests (CSS, JS, images), use Cache-First or Stale-While-Revalidate strategy
   event.respondWith(
     caches.match(event.request)
-      .then(response => {
-        // Cache hit - return response
-        if (response) {
-          return response;
+      .then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
         }
-        // Not in cache - fetch from network, then cache it
-        return fetch(event.request).then(
-          networkResponse => {
-            // Check if we received a valid response
-            if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-              return networkResponse;
-            }
-            // IMPORTANT: Clone the response. A response is a stream
-            // and because we want the browser to consume the response
-            // as well as the cache consuming the response, we need
-            // to clone it so we have two streams.
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME)
-              .then(cache => {
-                cache.put(event.request, responseToCache);
-              });
-            return networkResponse;
+        return fetch(event.request).then((networkResponse) => {
+          // Optionally cache new static assets dynamically if they are not in ASSETS_TO_CACHE
+          // Be careful what you cache here.
+          if (networkResponse && networkResponse.status === 200 && ASSETS_TO_CACHE.includes(event.request.url)) {
+             const responseToCache = networkResponse.clone();
+             caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
           }
-        ).catch(error => {
-          // Network request failed, try to serve a fallback if you have one
-          console.error('Fetching failed:', error);
-          // You could return a fallback page here if needed
-          // return caches.match('./offline.html');
+          return networkResponse;
         });
       })
   );

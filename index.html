@@ -1,14 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+    <!-- Cache Control Meta Tags - Add these -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <!-- End Cache Control Meta Tags -->
+
     <link rel="manifest" href="./manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="WeightTrack">
     <link rel="apple-touch-icon" href="./icon-192x192.png">
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Daily Weight Tracker</title>
     <style>
         :root {
@@ -307,11 +314,11 @@
 
         const loadWeights = () => {
             loadingMessage.style.display = 'block';
-            weightList.innerHTML = ''; // Clear list initially
+            weightList.innerHTML = '';
             weightsCollection.orderBy("date", "desc").orderBy("createdAt", "desc")
             .onSnapshot((querySnapshot) => {
                 const allWeightsForChart = [];
-                weightList.innerHTML = ''; // Clear list again before repopulating from snapshot
+                weightList.innerHTML = '';
                 loadingMessage.style.display = 'none';
 
                 if (querySnapshot.empty) {
@@ -321,18 +328,17 @@
                 }
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    allWeightsForChart.push({ id: doc.id, ...data }); // For the chart
+                    allWeightsForChart.push({ id: doc.id, ...data });
                     const li = document.createElement('li');
 
                     const entryDetailsDiv = document.createElement('div');
                     entryDetailsDiv.className = 'entry-details';
 
-                    // Date and Time Group
-                    const dateTimeGroup = document.createElement('div'); 
+                    const dateTimeGroup = document.createElement('div');
                     dateTimeGroup.className = 'date-time-group';
                     const dateDisplaySpan = document.createElement('span');
                     dateDisplaySpan.className = 'date-display';
-                    dateDisplaySpan.textContent = formatDate(data.date); 
+                    dateDisplaySpan.textContent = formatDate(data.date);
                     dateTimeGroup.appendChild(dateDisplaySpan);
 
                     if (data.createdAt && typeof data.createdAt.toDate === 'function') {
@@ -344,7 +350,7 @@
                         console.warn("data.createdAt is not a Firestore Timestamp:", data.createdAt);
                     }
                     entryDetailsDiv.appendChild(dateTimeGroup);
-                    
+
                     const weightDisplaySpan = document.createElement('span');
                     weightDisplaySpan.className = 'weight-display';
                     weightDisplaySpan.textContent = `${data.weight} ${data.unit || WEIGHT_UNIT}`;
@@ -353,7 +359,7 @@
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'delete-btn'; deleteBtn.textContent = 'Delete';
                     deleteBtn.onclick = (e) => { e.stopPropagation(); deleteWeight(doc.id); };
-                    
+
                     li.appendChild(entryDetailsDiv);
                     li.appendChild(deleteBtn);
                     weightList.appendChild(li);
@@ -389,7 +395,22 @@
         if ('serviceWorker' in navigator) {
           window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js') // Assuming sw.js is in the same directory
-              .then(registration => { console.log('ServiceWorker registration successful: ', registration.scope); })
+              .then(registration => {
+                console.log('ServiceWorker registration successful: ', registration.scope);
+                // Optional: Listen for updates to the service worker
+                registration.onupdatefound = () => {
+                  const installingWorker = registration.installing;
+                  if (installingWorker) {
+                    installingWorker.onstatechange = () => {
+                      if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        // New content is available; please refresh.
+                        console.log('New service worker installed. Refresh to get updates.');
+                        // You could show a toast message to the user here.
+                      }
+                    };
+                  }
+                };
+              })
               .catch(error => { console.log('ServiceWorker registration failed: ', error); });
           });
         }
