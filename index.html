@@ -1,13 +1,11 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <link rel="manifest" href="./manifest.json">
-
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="WeightTrack">
-    <link rel="apple-touch-icon" href="./icon-192x192.png"> <!-- Use one of your icons -->
+    <link rel="apple-touch-icon" href="./icon-192x192.png">
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -25,26 +23,26 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        .container {
+        /* Generic card style for sections */
+        .card {
             background-color: #fff;
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 450px; /* Keep form compact */
             box-sizing: border-box;
-            margin-bottom: 20px; /* Space before chart */
+            margin-bottom: 20px;
         }
 
-        .chart-container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            width: 100%;
+        #inputCard {
+            max-width: 450px; /* Keep form compact */
+        }
+
+        #weightChartCard {
             max-width: 700px; /* Chart can be wider */
-            box-sizing: border-box;
-            margin-top: 20px;
+        }
+        #historyCard {
+            max-width: 450px; /* History list similar to form */
         }
 
 
@@ -83,7 +81,6 @@
             box-shadow: 0 0 0 2px rgba(0,123,255,.25);
         }
 
-
         button#addWeightBtn {
             width: 100%;
             padding: 12px 15px;
@@ -96,34 +93,37 @@
             font-weight: 600;
             transition: background-color 0.2s ease-in-out;
         }
+        button#addWeightBtn:hover { background-color: #0056b3; }
+        button#addWeightBtn:active { background-color: #004085; }
 
-        button#addWeightBtn:hover {
-            background-color: #0056b3;
-        }
-        button#addWeightBtn:active {
-            background-color: #004085;
-        }
-
-
+        /* Scrollable History List */
         #weightList {
             list-style-type: none;
             padding: 0;
-            margin-top: 10px; /* Reduced margin as heading is there */
+            margin-top: 0; /* h2 provides top margin */
+            max-height: 300px; /* Or use vh, e.g., 40vh */
+            overflow-y: auto;
+            border: 1px solid #e0e0e0; /* Optional: border around scroll area */
+            border-radius: 6px; /* Optional: rounded corners for scroll area */
+            padding: 5px; /* Optional: internal padding for scroll area */
         }
 
         #weightList li {
             background-color: #f7f7f7;
-            padding: 12px 15px;
-            margin-bottom: 10px;
-            border-radius: 6px;
+            padding: 10px 12px; /* Slightly adjusted padding */
+            margin-bottom: 8px; /* Spacing between items */
+            border-radius: 4px; /* Softer corners for items */
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: 1px solid #e0e0e0;
+            /* border: 1px solid #e0e0e0; Removed, as parent has border now */
         }
-        #weightList li .entry-details {
-            flex-grow: 1;
+         /* Remove margin from last item if list has border */
+        #weightList li:last-child {
+            margin-bottom: 0;
         }
+
+        #weightList li .entry-details { flex-grow: 1; }
         #weightList li .date {
             font-size: 0.9em;
             color: #555;
@@ -146,55 +146,51 @@
             margin-left: 10px;
             transition: background-color 0.2s ease;
         }
-        #weightList li button.delete-btn:hover {
-            background-color: #c0392b;
-        }
+        #weightList li button.delete-btn:hover { background-color: #c0392b; }
+
         .loading, .no-entries {
             text-align: center;
             padding: 20px;
             font-style: italic;
             color: #606770;
         }
-
-        /* Chart specific styling */
-        #weightChartContainer {
-            margin-top: 30px;
-            padding: 15px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        /* Specific for no-entries inside scrollable list */
+        #weightList .no-entries {
+            padding: 10px; /* Less padding inside the scrollable list */
+            background-color: transparent;
         }
+
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Input Form Card -->
+    <div class="card" id="inputCard">
         <h1>Daily Weight</h1>
-
         <div class="input-group">
             <label for="weightInput">Weight (<span id="weight_unit_input_label">kg</span>):</label>
             <input type="number" id="weightInput" step="0.1" placeholder="e.g., 70.5" required>
         </div>
-
         <div class="input-group">
             <label for="dateInput">Date:</label>
             <input type="date" id="dateInput" required>
         </div>
-
         <button id="addWeightBtn">Add Entry</button>
+    </div>
 
+    <!-- Chart Card -->
+    <div class="card" id="weightChartCard" style="display: none;"> <!-- Initially hidden -->
+        <h2>Weight Trend</h2>
+        <canvas id="weightChart"></canvas>
+    </div>
+
+    <!-- History Card -->
+    <div class="card" id="historyCard">
         <h2>History</h2>
         <div id="loadingMessage" class="loading">Loading entries...</div>
         <ul id="weightList">
             <!-- Weight entries will be listed here -->
         </ul>
     </div>
-
-    <!-- Chart Container -->
-    <div class="chart-container" id="weightChartContainer" style="display: none;"> <!-- Initially hidden -->
-        <h2>Weight Trend</h2>
-        <canvas id="weightChart"></canvas>
-    </div>
-
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -203,14 +199,14 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
-        // IMPORTANT: Replace with your Firebase project's configuration
+        // IMPORTANT: Your Firebase project's configuration
         const firebaseConfig = {
           apiKey: "AIzaSyAegWMXimrC_5_WpnDyuconRNrq5Wp08kw",
           authDomain: "babytracker-f88a2.firebaseapp.com",
           projectId: "babytracker-f88a2",
           storageBucket: "babytracker-f88a2.firebasestorage.app",
           messagingSenderId: "582010889847",
-          appId: "1:582010889847:web:7ad86cb3fdc1faafa8c872"
+          appId: "1:582010889_WpnDyuconRNrq5Wp08kw7:web:7ad86cb3fdc1faafa8c872" // Check this appId, it might have a typo from previous copy
         };
 
         // Initialize Firebase
@@ -227,10 +223,10 @@
         const weightList = document.getElementById('weightList');
         const loadingMessage = document.getElementById('loadingMessage');
         const weightUnitLabel = document.getElementById('weight_unit_input_label');
-        const weightChartContainer = document.getElementById('weightChartContainer');
+        const weightChartCard = document.getElementById('weightChartCard'); // Changed from weightChartContainer
         const WEIGHT_UNIT = "kg";
 
-        let myWeightChart; // Variable to hold the chart instance
+        let myWeightChart;
 
         dateInput.valueAsDate = new Date();
         weightUnitLabel.textContent = WEIGHT_UNIT;
@@ -238,116 +234,55 @@
         const addWeight = async () => {
             const weight = parseFloat(weightInput.value);
             const date = dateInput.value;
-
-            if (isNaN(weight) || weight <= 0) {
-                alert("Please enter a valid weight.");
-                weightInput.focus();
-                return;
-            }
-            if (!date) {
-                alert("Please select a date.");
-                dateInput.focus();
-                return;
-            }
-
-            addWeightBtn.disabled = true;
-            addWeightBtn.textContent = "Adding...";
-
+            if (isNaN(weight) || weight <= 0) { alert("Please enter a valid weight."); weightInput.focus(); return; }
+            if (!date) { alert("Please select a date."); dateInput.focus(); return; }
+            addWeightBtn.disabled = true; addWeightBtn.textContent = "Adding...";
             try {
-                await weightsCollection.add({
-                    weight: weight,
-                    date: date,
-                    unit: WEIGHT_UNIT,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                weightInput.value = '';
-                console.log("Weight added successfully!");
-            } catch (error) {
-                console.error("Error adding weight: ", error);
-                alert("Failed to add weight. Check console.");
-            } finally {
-                addWeightBtn.disabled = false;
-                addWeightBtn.textContent = "Add Entry";
-            }
+                await weightsCollection.add({ weight: weight, date: date, unit: WEIGHT_UNIT, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                weightInput.value = ''; console.log("Weight added successfully!");
+            } catch (error) { console.error("Error adding weight: ", error); alert("Failed to add weight. Check console.");
+            } finally { addWeightBtn.disabled = false; addWeightBtn.textContent = "Add Entry"; }
         };
 
         const deleteWeight = async (id) => {
             if (!confirm("Are you sure you want to delete this entry?")) return;
-            try {
-                await weightsCollection.doc(id).delete();
-                console.log("Weight entry deleted:", id);
-            } catch (error) {
-                console.error("Error deleting weight: ", error);
-                alert("Failed to delete weight. Check console.");
-            }
+            try { await weightsCollection.doc(id).delete(); console.log("Weight entry deleted:", id);
+            } catch (error) { console.error("Error deleting weight: ", error); alert("Failed to delete weight. Check console."); }
         };
 
         const renderWeightChart = (weightsData) => {
             if (!weightsData || weightsData.length === 0) {
-                weightChartContainer.style.display = 'none';
-                if (myWeightChart) {
-                    myWeightChart.destroy();
-                    myWeightChart = null;
-                }
+                weightChartCard.style.display = 'none'; // Use weightChartCard
+                if (myWeightChart) { myWeightChart.destroy(); myWeightChart = null; }
                 return;
             }
-             weightChartContainer.style.display = 'block';
-
-
-            // Sort data by date ascending for the chart
+            weightChartCard.style.display = 'block'; // Use weightChartCard
             const sortedWeights = [...weightsData].sort((a, b) => new Date(a.date) - new Date(b.date));
-
-            const labels = sortedWeights.map(data => formatDate(data.date, { month: 'short', day: 'numeric' })); // Shorter date format for chart
+            const labels = sortedWeights.map(data => formatDate(data.date, { month: 'short', day: 'numeric' }));
             const dataPoints = sortedWeights.map(data => data.weight);
-
             const ctx = document.getElementById('weightChart').getContext('2d');
-
-            if (myWeightChart) {
-                myWeightChart.destroy(); // Destroy existing chart before creating a new one
-            }
-
+            if (myWeightChart) { myWeightChart.destroy(); }
             myWeightChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: `Weight (${WEIGHT_UNIT})`,
-                        data: dataPoints,
-                        borderColor: '#007bff',
-                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                        tension: 0.1, // Makes the line slightly curved
-                        fill: true
+                        label: `Weight (${WEIGHT_UNIT})`, data: dataPoints, borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)', tension: 0.1, fill: true
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: true, // Adjust as needed, false with a wrapper div can give more control
+                    responsive: true, maintainAspectRatio: true,
                     scales: {
-                        y: {
-                            beginAtZero: false, // Weight charts usually don't start at 0
-                            title: {
-                                display: true,
-                                text: `Weight (${WEIGHT_UNIT})`
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Date'
-                            }
-                        }
+                        y: { beginAtZero: false, title: { display: true, text: `Weight (${WEIGHT_UNIT})` } },
+                        x: { title: { display: true, text: 'Date' } }
                     },
                     plugins: {
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    if (context.parsed.y !== null) {
-                                        label += context.parsed.y + ` ${WEIGHT_UNIT}`;
-                                    }
+                                    let label = context.dataset.label || ''; if (label) { label += ': '; }
+                                    if (context.parsed.y !== null) { label += context.parsed.y + ` ${WEIGHT_UNIT}`; }
                                     return label;
                                 }
                             }
@@ -360,71 +295,53 @@
         const loadWeights = () => {
             loadingMessage.style.display = 'block';
             weightList.innerHTML = '';
-
             weightsCollection.orderBy("date", "desc").orderBy("createdAt", "desc")
             .onSnapshot((querySnapshot) => {
                 const allWeightsForChart = [];
-                weightList.innerHTML = '';
+                weightList.innerHTML = ''; // Clear before populating
+                loadingMessage.style.display = 'none'; // Hide loading message once we have a snapshot
+
                 if (querySnapshot.empty) {
                     weightList.innerHTML = '<li class="no-entries">No weights recorded yet.</li>';
-                    loadingMessage.style.display = 'none';
-                    renderWeightChart([]); // Render empty chart or hide it
+                    renderWeightChart([]);
                     return;
                 }
-
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    allWeightsForChart.push({ id: doc.id, ...data }); // Keep id for potential future use
-
+                    allWeightsForChart.push({ id: doc.id, ...data });
                     const li = document.createElement('li');
                     const entryDetailsDiv = document.createElement('div');
                     entryDetailsDiv.className = 'entry-details';
-
                     const dateSpan = document.createElement('span');
-                    dateSpan.className = 'date';
-                    dateSpan.textContent = formatDate(data.date);
-                    
+                    dateSpan.className = 'date'; dateSpan.textContent = formatDate(data.date);
                     const weightSpan = document.createElement('span');
-                    weightSpan.className = 'weight';
-                    weightSpan.textContent = `${data.weight} ${data.unit || WEIGHT_UNIT}`;
-
-                    entryDetailsDiv.appendChild(dateSpan);
-                    entryDetailsDiv.appendChild(weightSpan);
-
+                    weightSpan.className = 'weight'; weightSpan.textContent = `${data.weight} ${data.unit || WEIGHT_UNIT}`;
+                    entryDetailsDiv.appendChild(dateSpan); entryDetailsDiv.appendChild(weightSpan);
                     const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'delete-btn';
-                    deleteBtn.textContent = 'Delete';
-                    deleteBtn.onclick = (e) => {
-                        e.stopPropagation();
-                        deleteWeight(doc.id);
-                    };
-
-                    li.appendChild(entryDetailsDiv);
-                    li.appendChild(deleteBtn);
+                    deleteBtn.className = 'delete-btn'; deleteBtn.textContent = 'Delete';
+                    deleteBtn.onclick = (e) => { e.stopPropagation(); deleteWeight(doc.id); };
+                    li.appendChild(entryDetailsDiv); li.appendChild(deleteBtn);
                     weightList.appendChild(li);
                 });
-                loadingMessage.style.display = 'none';
-                renderWeightChart(allWeightsForChart); // Pass data to render the chart
+                renderWeightChart(allWeightsForChart);
             }, (error) => {
                 console.error("Error loading weights: ", error);
-                // Check for index error specifically
+                loadingMessage.style.display = 'none';
                 if (error.code === 'failed-precondition' && error.message.includes('index')) {
-                     weightList.innerHTML = `<li>Error: Firestore query requires an index. Please click the link in the browser console to create it.</li>`;
+                     weightList.innerHTML = `<li>Error: Firestore query requires an index.</li>`;
                      const link = error.message.substring(error.message.indexOf('https://'));
                      if (link) {
                         const p = document.createElement('p');
+                        p.style.textAlign = 'center'; p.style.padding = '10px';
                         p.innerHTML = `You can create it here: <a href="${link}" target="_blank" rel="noopener noreferrer">Create Index</a>`;
-                        weightList.appendChild(p);
+                        // Append after the historyCard's h2, or inside a message area
+                        document.getElementById('historyCard').appendChild(p);
                      }
-                } else {
-                    weightList.innerHTML = '<li>Error loading weights. Check console.</li>';
-                }
-                loadingMessage.style.display = 'none';
-                renderWeightChart([]); // Render empty chart or hide it
+                } else { weightList.innerHTML = '<li>Error loading weights. Check console.</li>'; }
+                renderWeightChart([]);
             });
         };
 
-        // Updated formatDate to accept options for chart labels
         function formatDate(dateString, options = { year: 'numeric', month: 'long', day: 'numeric' }) {
             const parts = dateString.split('-');
             const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
@@ -432,25 +349,15 @@
         }
 
         addWeightBtn.addEventListener('click', addWeight);
-        weightInput.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                addWeight();
-            }
-        });
+        weightInput.addEventListener('keypress', (event) => { if (event.key === 'Enter') { event.preventDefault(); addWeight(); } });
 
         loadWeights();
-        // Inside your existing <script> tag, at the very end
 
         if ('serviceWorker' in navigator) {
           window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
-              .then(registration => {
-                console.log('ServiceWorker registration successful with scope: ', registration.scope);
-              })
-              .catch(error => {
-                console.log('ServiceWorker registration failed: ', error);
-              });
+              .then(registration => { console.log('ServiceWorker registration successful with scope: ', registration.scope); })
+              .catch(error => { console.log('ServiceWorker registration failed: ', error); });
           });
         }
     </script>
