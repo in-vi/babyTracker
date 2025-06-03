@@ -14,12 +14,13 @@
         :root {
             --primary-color: #007AFF; /* iOS Blue */
             --primary-color-dark: #005ecb;
-            --light-gray: #f0f2f5;
-            --medium-gray: #e5e5ea;
-            --dark-gray: #8e8e93;
-            --text-color: #1c1c1e;
+            --light-gray: #f0f2f5; /* Page background */
+            --medium-gray: #e5e5ea; /* Borders, subtle UI elements */
+            --dark-gray: #8e8e93; /* Secondary text */
+            --text-color: #1c1c1e; /* Primary text */
             --card-background: #ffffff;
-            --border-radius: 12px;
+            --border-radius-card: 14px; /* Slightly more rounded for modern iOS */
+            --border-radius-element: 10px; /* For inputs, buttons */
             --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
 
@@ -29,7 +30,7 @@
             background-color: var(--light-gray);
             color: var(--text-color);
             -webkit-tap-highlight-color: transparent;
-            padding: 10px 0;
+            padding: 20px 0; /* Increased top/bottom padding */
         }
 
         .app-container {
@@ -37,14 +38,14 @@
             flex-direction: column;
             align-items: center;
             width: 100%;
-            padding: 0 10px;
+            padding: 0 15px; /* Increased horizontal padding */
             box-sizing: border-box;
         }
 
         .card {
             background-color: var(--card-background);
             padding: 20px;
-            border-radius: var(--border-radius);
+            border-radius: var(--border-radius-card);
             box-shadow: var(--box-shadow);
             width: 100%;
             box-sizing: border-box;
@@ -55,12 +56,16 @@
         #weightChartCard { max-width: 720px; }
 
         h1 {
-            text-align: center; color: var(--text-color); margin-top: 10px;
-            margin-bottom: 30px; font-size: 2em; font-weight: 600;
+            text-align: center; color: var(--text-color);
+            margin-top: 15px; /* Adjusted from 10px */
+            margin-bottom: 30px; font-size: 2.2em; /* Increased font size */
+            font-weight: 600;
         }
         h2 {
             color: var(--text-color); margin-top: 5px; margin-bottom: 20px;
-            font-size: 1.6em; font-weight: 500; border-bottom: 1px solid var(--medium-gray);
+            font-size: 1.8em; /* Increased font size */
+            font-weight: 600; /* Bolder */
+            border-bottom: 1px solid var(--medium-gray);
             padding-bottom: 10px;
         }
 
@@ -71,9 +76,11 @@
         }
         .input-group input[type="number"],
         .input-group input[type="date"] {
-            width: 100%; padding: 14px; border: 1px solid var(--medium-gray);
-            border-radius: 8px; box-sizing: border-box; font-size: 1em;
-            background-color: #f9f9f9;
+            width: 100%; padding: 15px; /* Increased padding */
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius-element); /* Updated border radius */
+            box-sizing: border-box; font-size: 1.05em; /* Slightly larger font */
+            background-color: #f9f9f9; /* Subtle background for input */
         }
         .input-group input:focus {
             outline: none; border-color: var(--primary-color);
@@ -81,8 +88,11 @@
         }
 
         button#addWeightBtn {
-            width: 100%; padding: 15px; background-color: var(--primary-color);
-            color: white; border: none; border-radius: 8px; cursor: pointer;
+            width: 100%; padding: 16px; /* Increased padding */
+            background-color: var(--primary-color);
+            color: white; border: none;
+            border-radius: var(--border-radius-element); /* Updated border radius */
+            cursor: pointer;
             font-size: 1.1em; font-weight: 600;
             transition: background-color 0.2s ease-in-out, transform 0.1s ease;
         }
@@ -93,12 +103,14 @@
 
         #weightList {
             list-style-type: none; padding: 0; margin-top: 0;
-            max-height: 350px; /* <<< This makes the list scrollable */
-            overflow-y: auto;  /* <<< This enables the scrollbar */
+            max-height: 350px;
+            overflow-y: auto;
         }
         #weightList li {
             background-color: var(--card-background); border: 1px solid var(--medium-gray);
-            padding: 12px 15px; margin-bottom: 10px; border-radius: 8px;
+            padding: 15px; /* Increased padding */
+            margin-bottom: 10px;
+            border-radius: var(--border-radius-element); /* Consistent rounded corners */
             display: flex; justify-content: space-between; align-items: center;
             transition: box-shadow 0.2s ease;
         }
@@ -107,33 +119,35 @@
 
         #weightList li .entry-details {
             flex-grow: 1;
-            /* This div will contain the date/time group and the weight group */
         }
         #weightList li .date-time-group {
-            display: block; /* Date/time group takes its own line */
+            display: block;
             font-size: 0.9em;
             color: var(--dark-gray);
             margin-bottom: 5px;
         }
-        #weightList li .date-display { font-weight: 500; }
+        #weightList li .date-display { font-weight: 600; /* Slightly bolder date */ }
         #weightList li .time-display {
-            font-size: 0.9em; /* Relative to parent .date-time-group's font-size */
-            color: #a0a0a5; /* Lighter color for time */
-            margin-left: 8px; /* Space between date and time */
+            font-size: 0.9em;
+            color: #a0a0a5;
+            margin-left: 8px;
         }
         #weightList li .weight-display {
-            display: block; /* Weight display takes its own line below date/time */
+            display: block;
             font-weight: 600;
-            font-size: 1.2em;
+            font-size: 1.3em; /* Slightly larger weight display */
             color: var(--text-color);
-            margin-top: 2px; /* Small space above weight if date/time is short */
+            margin-top: 2px;
         }
         #weightList li button.delete-btn {
-            background-color: #ff3b30; color: white; border: none;
-            border-radius: 6px; padding: 7px 12px; font-size: 0.9em;
+            background-color: #ff3b30; /* iOS destructive red */
+            color: white; border: none;
+            border-radius: 8px; /* Slightly rounder */
+            padding: 8px 14px; /* Adjusted padding */
+            font-size: 0.9em;
             font-weight: 500; cursor: pointer; width: auto; margin-left: 15px;
             transition: background-color 0.2s ease;
-            flex-shrink: 0; /* Prevent delete button from shrinking */
+            flex-shrink: 0;
         }
         #weightList li button.delete-btn:hover { background-color: #d92c23; }
 
@@ -183,7 +197,7 @@
     <script>
         // Ensure your firebaseConfig is absolutely correct.
         const firebaseConfig = {
-          apiKey: "AIzaSyAegWMXimrC_5_WpnDyuconRNrq5Wp08kw",
+          apiKey: "AIzaSyAegWMXimrC_5_WpnDyuconRNrq5Wp08kw", // Replace with your actual API key
           authDomain: "babytracker-f88a2.firebaseapp.com",
           projectId: "babytracker-f88a2",
           storageBucket: "babytracker-f88a2.firebasestorage.app",
@@ -314,27 +328,28 @@
                     entryDetailsDiv.className = 'entry-details';
 
                     // Date and Time Group
-                    const dateTimeGroup = document.createElement('div');
+                    const dateTimeGroup = document.createElement('div'); 
                     dateTimeGroup.className = 'date-time-group';
                     const dateDisplaySpan = document.createElement('span');
                     dateDisplaySpan.className = 'date-display';
-                    dateDisplaySpan.textContent = formatDate(data.date); // User-selected date for record
+                    dateDisplaySpan.textContent = formatDate(data.date); 
                     dateTimeGroup.appendChild(dateDisplaySpan);
-                    if (data.createdAt) { // Timestamp of when entry was made
+
+                    if (data.createdAt && typeof data.createdAt.toDate === 'function') {
                         const timeDisplaySpan = document.createElement('span');
                         timeDisplaySpan.className = 'time-display';
                         timeDisplaySpan.textContent = formatTimestampToTime(data.createdAt);
                         dateTimeGroup.appendChild(timeDisplaySpan);
+                    } else if (data.createdAt) {
+                        console.warn("data.createdAt is not a Firestore Timestamp:", data.createdAt);
                     }
                     entryDetailsDiv.appendChild(dateTimeGroup);
                     
-                    // Weight Display Group
                     const weightDisplaySpan = document.createElement('span');
                     weightDisplaySpan.className = 'weight-display';
                     weightDisplaySpan.textContent = `${data.weight} ${data.unit || WEIGHT_UNIT}`;
                     entryDetailsDiv.appendChild(weightDisplaySpan);
 
-                    // Delete Button
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'delete-btn'; deleteBtn.textContent = 'Delete';
                     deleteBtn.onclick = (e) => { e.stopPropagation(); deleteWeight(doc.id); };
@@ -343,7 +358,7 @@
                     li.appendChild(deleteBtn);
                     weightList.appendChild(li);
                 });
-                renderWeightChart(allWeightsForChart); // Update chart with all data
+                renderWeightChart(allWeightsForChart);
             }, (error) => {
                 console.error("Error loading weights: ", error);
                 loadingMessage.style.display = 'none';
@@ -373,7 +388,7 @@
 
         if ('serviceWorker' in navigator) {
           window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js')
+            navigator.serviceWorker.register('./sw.js') // Assuming sw.js is in the same directory
               .then(registration => { console.log('ServiceWorker registration successful: ', registration.scope); })
               .catch(error => { console.log('ServiceWorker registration failed: ', error); });
           });
