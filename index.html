@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -24,17 +23,31 @@
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 450px;
+            max-width: 450px; /* Keep form compact */
             box-sizing: border-box;
+            margin-bottom: 20px; /* Space before chart */
         }
 
-        h1 {
+        .chart-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 700px; /* Chart can be wider */
+            box-sizing: border-box;
+            margin-top: 20px;
+        }
+
+
+        h1, h2 {
             text-align: center;
             color: #1c1e21;
             margin-top: 0;
-            margin-bottom: 25px;
-            font-size: 1.8em;
         }
+        h1 { margin-bottom: 25px; font-size: 1.8em; }
+        h2 { margin-bottom: 15px; font-size: 1.5em; }
+
 
         .input-group {
             margin-bottom: 18px;
@@ -87,7 +100,7 @@
         #weightList {
             list-style-type: none;
             padding: 0;
-            margin-top: 30px;
+            margin-top: 10px; /* Reduced margin as heading is there */
         }
 
         #weightList li {
@@ -134,6 +147,15 @@
             font-style: italic;
             color: #606770;
         }
+
+        /* Chart specific styling */
+        #weightChartContainer {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
     </style>
 </head>
 <body>
@@ -159,27 +181,35 @@
         </ul>
     </div>
 
+    <!-- Chart Container -->
+    <div class="chart-container" id="weightChartContainer" style="display: none;"> <!-- Initially hidden -->
+        <h2>Weight Trend</h2>
+        <canvas id="weightChart"></canvas>
+    </div>
+
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <!-- Chart.js SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
-        // IMPORTANT: Replace with your Firebase project's configuration from "babyTracker"
+        // IMPORTANT: Replace with your Firebase project's configuration
         const firebaseConfig = {
-          apiKey: "AIzaSyAegWMXimrC_5_WpnDyuconRNrq5Wp08kw", // Make sure this is YOUR actual key
+          apiKey: "AIzaSyAegWMXimrC_5_WpnDyuconRNrq5Wp08kw",
           authDomain: "babytracker-f88a2.firebaseapp.com",
           projectId: "babytracker-f88a2",
           storageBucket: "babytracker-f88a2.firebasestorage.app",
           messagingSenderId: "582010889847",
           appId: "1:582010889847:web:7ad86cb3fdc1faafa8c872"
         };
-        
+
         // Initialize Firebase
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
         const db = firebase.firestore();
-        // Name your collection for weights, e.g., "babyWeights" or "dailyHealthMetrics"
         const weightsCollection = db.collection("babyWeights");
 
         // DOM Elements
@@ -189,7 +219,10 @@
         const weightList = document.getElementById('weightList');
         const loadingMessage = document.getElementById('loadingMessage');
         const weightUnitLabel = document.getElementById('weight_unit_input_label');
-        const WEIGHT_UNIT = "kg"; // Or "lbs" - ensure consistency
+        const weightChartContainer = document.getElementById('weightChartContainer');
+        const WEIGHT_UNIT = "kg";
+
+        let myWeightChart; // Variable to hold the chart instance
 
         dateInput.valueAsDate = new Date();
         weightUnitLabel.textContent = WEIGHT_UNIT;
@@ -241,59 +274,152 @@
             }
         };
 
+        const renderWeightChart = (weightsData) => {
+            if (!weightsData || weightsData.length === 0) {
+                weightChartContainer.style.display = 'none';
+                if (myWeightChart) {
+                    myWeightChart.destroy();
+                    myWeightChart = null;
+                }
+                return;
+            }
+             weightChartContainer.style.display = 'block';
+
+
+            // Sort data by date ascending for the chart
+            const sortedWeights = [...weightsData].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            const labels = sortedWeights.map(data => formatDate(data.date, { month: 'short', day: 'numeric' })); // Shorter date format for chart
+            const dataPoints = sortedWeights.map(data => data.weight);
+
+            const ctx = document.getElementById('weightChart').getContext('2d');
+
+            if (myWeightChart) {
+                myWeightChart.destroy(); // Destroy existing chart before creating a new one
+            }
+
+            myWeightChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `Weight (${WEIGHT_UNIT})`,
+                        data: dataPoints,
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        tension: 0.1, // Makes the line slightly curved
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true, // Adjust as needed, false with a wrapper div can give more control
+                    scales: {
+                        y: {
+                            beginAtZero: false, // Weight charts usually don't start at 0
+                            title: {
+                                display: true,
+                                text: `Weight (${WEIGHT_UNIT})`
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + ` ${WEIGHT_UNIT}`;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        };
+
         const loadWeights = () => {
             loadingMessage.style.display = 'block';
             weightList.innerHTML = '';
 
             weightsCollection.orderBy("date", "desc").orderBy("createdAt", "desc")
             .onSnapshot((querySnapshot) => {
+                const allWeightsForChart = [];
                 weightList.innerHTML = '';
                 if (querySnapshot.empty) {
                     weightList.innerHTML = '<li class="no-entries">No weights recorded yet.</li>';
-                } else {
-                    querySnapshot.forEach((doc) => {
-                        const data = doc.data();
-                        const li = document.createElement('li');
-                        
-                        const entryDetailsDiv = document.createElement('div');
-                        entryDetailsDiv.className = 'entry-details';
-
-                        const dateSpan = document.createElement('span');
-                        dateSpan.className = 'date';
-                        dateSpan.textContent = formatDate(data.date);
-                        
-                        const weightSpan = document.createElement('span');
-                        weightSpan.className = 'weight';
-                        weightSpan.textContent = `${data.weight} ${data.unit || WEIGHT_UNIT}`;
-
-                        entryDetailsDiv.appendChild(dateSpan);
-                        entryDetailsDiv.appendChild(weightSpan);
-
-                        const deleteBtn = document.createElement('button');
-                        deleteBtn.className = 'delete-btn';
-                        deleteBtn.textContent = 'Delete';
-                        deleteBtn.onclick = (e) => {
-                            e.stopPropagation();
-                            deleteWeight(doc.id);
-                        };
-
-                        li.appendChild(entryDetailsDiv);
-                        li.appendChild(deleteBtn);
-                        weightList.appendChild(li);
-                    });
+                    loadingMessage.style.display = 'none';
+                    renderWeightChart([]); // Render empty chart or hide it
+                    return;
                 }
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    allWeightsForChart.push({ id: doc.id, ...data }); // Keep id for potential future use
+
+                    const li = document.createElement('li');
+                    const entryDetailsDiv = document.createElement('div');
+                    entryDetailsDiv.className = 'entry-details';
+
+                    const dateSpan = document.createElement('span');
+                    dateSpan.className = 'date';
+                    dateSpan.textContent = formatDate(data.date);
+                    
+                    const weightSpan = document.createElement('span');
+                    weightSpan.className = 'weight';
+                    weightSpan.textContent = `${data.weight} ${data.unit || WEIGHT_UNIT}`;
+
+                    entryDetailsDiv.appendChild(dateSpan);
+                    entryDetailsDiv.appendChild(weightSpan);
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        deleteWeight(doc.id);
+                    };
+
+                    li.appendChild(entryDetailsDiv);
+                    li.appendChild(deleteBtn);
+                    weightList.appendChild(li);
+                });
                 loadingMessage.style.display = 'none';
+                renderWeightChart(allWeightsForChart); // Pass data to render the chart
             }, (error) => {
                 console.error("Error loading weights: ", error);
-                weightList.innerHTML = '<li>Error loading weights. Check console.</li>';
+                // Check for index error specifically
+                if (error.code === 'failed-precondition' && error.message.includes('index')) {
+                     weightList.innerHTML = `<li>Error: Firestore query requires an index. Please click the link in the browser console to create it.</li>`;
+                     const link = error.message.substring(error.message.indexOf('https://'));
+                     if (link) {
+                        const p = document.createElement('p');
+                        p.innerHTML = `You can create it here: <a href="${link}" target="_blank" rel="noopener noreferrer">Create Index</a>`;
+                        weightList.appendChild(p);
+                     }
+                } else {
+                    weightList.innerHTML = '<li>Error loading weights. Check console.</li>';
+                }
                 loadingMessage.style.display = 'none';
+                renderWeightChart([]); // Render empty chart or hide it
             });
         };
 
-        function formatDate(dateString) {
+        // Updated formatDate to accept options for chart labels
+        function formatDate(dateString, options = { year: 'numeric', month: 'long', day: 'numeric' }) {
             const parts = dateString.split('-');
             const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
             return dateObj.toLocaleDateString(undefined, options);
         }
 
