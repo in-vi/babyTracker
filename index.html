@@ -1,43 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-
-    <!-- Cache Control Meta Tags - Add these -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <!-- End Cache Control Meta Tags -->
-
     <link rel="manifest" href="./manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="WeightTrack">
     <link rel="apple-touch-icon" href="./icon-192x192.png">
 
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Daily Weight Tracker</title>
     <style>
         :root {
-            --primary-color: #007AFF; /* iOS Blue */
-            --primary-color-dark: #005ecb;
-            --light-gray: #f0f2f5; /* Page background */
-            --medium-gray: #e5e5ea; /* Borders, subtle UI elements */
-            --dark-gray: #8e8e93; /* Secondary text */
-            --text-color: #1c1c1e; /* Primary text */
+            --primary-color: #0A84FF; /* Updated iOS Blue */
+            --primary-color-dark: #0073E6; /* Darker shade for hover/active */
+            --destructive-color: #FF3B30; /* iOS Destructive Red */
+            --destructive-color-dark: #E5352A;
+
+            --page-background: #f0f2f5; /* Standard light gray page background */
             --card-background: #ffffff;
-            --border-radius-card: 14px; /* Slightly more rounded for modern iOS */
-            --border-radius-element: 10px; /* For inputs, buttons */
-            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --input-background: #F7F7F7; /* Slightly off-white for inputs */
+
+            --light-gray: #E5E5EA; /* Borders, subtle UI elements (formerly medium-gray) */
+            --medium-gray: #C7C7CD; /* Secondary text, placeholders (mix of dark-gray and new placeholder) */
+            --dark-gray: #8E8E93; /* Detail text in list items */
+            --text-color: #1C1C1E; /* Primary text */
+
+            --border-radius-card: 16px; /* Slightly larger for modern iOS cards */
+            --border-radius-element: 10px; /* For inputs, buttons, list items */
+            --card-shadow: 0 6px 18px rgba(0, 0, 0, 0.07); /* Softer card shadow */
+            --element-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Subtle shadow for list items */
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
-            background-color: var(--light-gray);
+            background-color: var(--page-background);
             color: var(--text-color);
             -webkit-tap-highlight-color: transparent;
-            padding: 20px 0; /* Increased top/bottom padding */
+            padding: 25px 0; /* Increased top/bottom padding */
+            line-height: 1.5; /* Improved readability */
         }
 
         .app-container {
@@ -45,7 +50,7 @@
             flex-direction: column;
             align-items: center;
             width: 100%;
-            padding: 0 15px; /* Increased horizontal padding */
+            padding: 0 15px;
             box-sizing: border-box;
         }
 
@@ -53,121 +58,159 @@
             background-color: var(--card-background);
             padding: 20px;
             border-radius: var(--border-radius-card);
-            box-shadow: var(--box-shadow);
+            box-shadow: var(--card-shadow);
             width: 100%;
             box-sizing: border-box;
-            margin-bottom: 25px;
+            margin-bottom: 30px; /* Increased spacing between cards */
         }
 
         #inputCard, #historyCard { max-width: 480px; }
         #weightChartCard { max-width: 720px; }
 
         h1 {
-            text-align: center; color: var(--text-color);
-            margin-top: 15px; /* Adjusted from 10px */
-            margin-bottom: 30px; font-size: 2.2em; /* Increased font size */
+            text-align: center; color: var(--primary-color); /* Changed to primary color */
+            margin-top: 10px;
+            margin-bottom: 35px; /* More space below title */
+            font-size: 2.3em;
             font-weight: 600;
+            letter-spacing: -0.5px; /* Subtle refinement */
         }
         h2 {
-            color: var(--text-color); margin-top: 5px; margin-bottom: 20px;
-            font-size: 1.8em; /* Increased font size */
-            font-weight: 600; /* Bolder */
-            border-bottom: 1px solid var(--medium-gray);
-            padding-bottom: 10px;
+            color: var(--text-color); margin-top: 5px; margin-bottom: 25px; /* More space below subtitle */
+            font-size: 1.7em;
+            font-weight: 600;
+            border-bottom: 1px solid var(--light-gray);
+            padding-bottom: 12px;
         }
 
-        .input-group { margin-bottom: 20px; }
+        .input-group { margin-bottom: 22px; /* Slightly more space */ }
         .input-group label {
-            display: block; margin-bottom: 8px; font-weight: 500;
-            color: var(--dark-gray); font-size: 0.95em;
+            display: block; margin-bottom: 10px; /* More space for label */
+            font-weight: 500;
+            color: var(--dark-gray); /* Was var(--dark-gray), changed to a more appropriate one */
+            font-size: 0.9em;
         }
         .input-group input[type="number"],
         .input-group input[type="date"] {
-            width: 100%; padding: 15px; /* Increased padding */
-            border: 1px solid var(--medium-gray);
-            border-radius: var(--border-radius-element); /* Updated border radius */
-            box-sizing: border-box; font-size: 1.05em; /* Slightly larger font */
-            background-color: #f9f9f9; /* Subtle background for input */
+            width: 100%; padding: 15px;
+            border: 1px solid transparent; /* Keep for layout on focus */
+            border-radius: var(--border-radius-element);
+            box-sizing: border-box; font-size: 1.05em;
+            background-color: var(--input-background);
+            color: var(--text-color);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04) inset; /* Subtle inset */
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .input-group input::placeholder {
+            color: var(--medium-gray);
         }
         .input-group input:focus {
-            outline: none; border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(0,123,255,.25); background-color: var(--card-background);
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: var(--card-background);
+            box-shadow: 0 0 0 3px rgba(var(--primary-color), 0.2), 0 1px 2px rgba(0,0,0,0.0) inset;
+        }
+        /* Remove spinners from number input for a cleaner look on mobile */
+        .input-group input[type="number"]::-webkit-outer-spin-button,
+        .input-group input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .input-group input[type="number"] {
+            -moz-appearance: textfield; /* Firefox */
         }
 
+
         button#addWeightBtn {
-            width: 100%; padding: 16px; /* Increased padding */
-            background-color: var(--primary-color);
+            width: 100%; padding: 16px;
+            background-image: linear-gradient(to bottom, var(--primary-color), var(--primary-color-dark));
             color: white; border: none;
-            border-radius: var(--border-radius-element); /* Updated border radius */
+            border-radius: var(--border-radius-element);
             cursor: pointer;
             font-size: 1.1em; font-weight: 600;
-            transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: background-image 0.2s ease-in-out, transform 0.1s ease, box-shadow 0.1s ease;
         }
-        button#addWeightBtn:hover { background-color: var(--primary-color-dark); }
+        button#addWeightBtn:hover {
+            background-image: linear-gradient(to bottom, var(--primary-color-dark), #0065CC); /* Slightly darker hover */
+            box-shadow: 0 3px 7px rgba(0,0,0,0.12);
+        }
         button#addWeightBtn:active {
-            background-color: var(--primary-color-dark); transform: translateY(1px);
+            background-image: linear-gradient(to top, var(--primary-color), var(--primary-color-dark));
+            transform: translateY(1px);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
         }
 
         #weightList {
-            list-style-type: none; padding: 0; margin-top: 0;
-            max-height: 350px;
+            list-style-type: none; padding: 0; margin-top: 5px; /* Align with card padding better */
+            max-height: 380px; /* Slightly taller */
             overflow-y: auto;
         }
         #weightList li {
-            background-color: var(--card-background); border: 1px solid var(--medium-gray);
-            padding: 15px; /* Increased padding */
-            margin-bottom: 10px;
-            border-radius: var(--border-radius-element); /* Consistent rounded corners */
+            background-color: var(--card-background);
+            border-radius: var(--border-radius-element);
+            padding: 15px;
+            margin-bottom: 12px;
             display: flex; justify-content: space-between; align-items: center;
-            transition: box-shadow 0.2s ease;
+            box-shadow: var(--element-shadow);
+            transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
         }
-        #weightList li:hover { box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+        #weightList li:hover {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
+        }
         #weightList li:last-child { margin-bottom: 0; }
 
         #weightList li .entry-details {
             flex-grow: 1;
+            margin-right: 10px; /* Space before delete button */
         }
         #weightList li .date-time-group {
             display: block;
-            font-size: 0.9em;
+            font-size: 0.85em; /* Slightly smaller date/time */
             color: var(--dark-gray);
-            margin-bottom: 5px;
+            margin-bottom: 6px; /* More space */
         }
-        #weightList li .date-display { font-weight: 600; /* Slightly bolder date */ }
+        #weightList li .date-display { font-weight: 500; } /* Normal weight for date */
         #weightList li .time-display {
             font-size: 0.9em;
-            color: #a0a0a5;
+            color: var(--medium-gray); /* Lighter for time */
             margin-left: 8px;
         }
         #weightList li .weight-display {
             display: block;
-            font-weight: 600;
-            font-size: 1.3em; /* Slightly larger weight display */
+            font-weight: 600; /* Bold weight */
+            font-size: 1.4em; /* More prominent weight */
             color: var(--text-color);
-            margin-top: 2px;
+            line-height: 1.2; /* Adjust line height for larger font */
         }
         #weightList li button.delete-btn {
-            background-color: #ff3b30; /* iOS destructive red */
+            background-color: var(--destructive-color);
             color: white; border: none;
-            border-radius: 8px; /* Slightly rounder */
-            padding: 8px 14px; /* Adjusted padding */
-            font-size: 0.9em;
-            font-weight: 500; cursor: pointer; width: auto; margin-left: 15px;
-            transition: background-color 0.2s ease;
+            border-radius: 8px;
+            padding: 7px 12px; /* Slightly adjusted padding */
+            font-size: 0.85em;
+            font-weight: 500; cursor: pointer; width: auto; margin-left: 10px;
+            transition: background-color 0.2s ease, transform 0.1s ease;
             flex-shrink: 0;
         }
-        #weightList li button.delete-btn:hover { background-color: #d92c23; }
+        #weightList li button.delete-btn:hover { background-color: var(--destructive-color-dark); }
+        #weightList li button.delete-btn:active { transform: scale(0.95); }
+
 
         .loading, .no-entries {
-            text-align: center; padding: 25px; font-style: italic;
-            color: var(--dark-gray); font-size: 0.95em;
+            text-align: center; padding: 30px 15px; /* More padding */
+            font-style: italic;
+            color: var(--medium-gray);
+            font-size: 1em; /* Slightly larger */
         }
         #weightList .no-entries {
             border: none; background-color: transparent; box-shadow: none;
+            margin-top: 10px;
         }
-        #weightList .no-entries:hover { box-shadow: none; }
+        #weightList .no-entries:hover { box-shadow: none; transform: none;}
 
-        #weightChartCard canvas { margin-top: 10px; }
+        #weightChartCard canvas { margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -241,6 +284,8 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 weightInput.value = ''; console.log("Weight added successfully!");
+                 // Optionally, set focus to weightInput again for quick next entry
+                // weightInput.focus();
             } catch (error) { console.error("Error adding weight: ", error); alert("Failed to add weight. Check console.");
             } finally { addWeightBtn.disabled = false; addWeightBtn.textContent = "Add Entry"; }
         };
@@ -269,7 +314,9 @@
                     labels: labels,
                     datasets: [{
                         label: `Weight (${WEIGHT_UNIT})`, data: dataPoints, borderColor: 'var(--primary-color)',
-                        backgroundColor: 'rgba(0, 123, 255, 0.1)', tension: 0.2, fill: true, pointBackgroundColor: 'var(--primary-color)', pointRadius: 4, pointHoverRadius: 6
+                        backgroundColor: 'rgba(10, 132, 255, 0.1)', tension: 0.3, fill: true,
+                        pointBackgroundColor: 'var(--primary-color)', pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: 'var(--primary-color)',
+                        pointRadius: 5, pointHoverRadius: 7, pointBorderWidth: 2
                     }]
                 },
                 options: {
@@ -277,20 +324,21 @@
                     scales: {
                         y: {
                             beginAtZero: false,
-                            title: { display: true, text: `Weight (${WEIGHT_UNIT})`, font: {size: 14}},
+                            title: { display: true, text: `Weight (${WEIGHT_UNIT})`, font: {size: 13, weight: '500'}, color: 'var(--dark-gray)'},
                             grid: { color: 'rgba(0,0,0,0.05)'},
-                            ticks: { font: {size: 12}}
+                            ticks: { font: {size: 12}, color: 'var(--text-color)'}
                         },
                         x: {
-                            title: { display: true, text: 'Date', font: {size: 14}},
+                            title: { display: true, text: 'Date', font: {size: 13, weight: '500'}, color: 'var(--dark-gray)'},
                             grid: { display: false },
-                            ticks: { font: {size: 12}}
+                            ticks: { font: {size: 12}, color: 'var(--text-color)'}
                         }
                     },
                     plugins: {
                         legend: { display: false },
                         tooltip: {
-                            backgroundColor: 'rgba(0,0,0,0.7)', titleFont: {size: 14}, bodyFont: {size: 12},
+                            backgroundColor: 'rgba(0,0,0,0.8)', titleFont: {size: 14}, bodyFont: {size: 13},
+                            padding: 10, cornerRadius: 6, displayColors: false,
                             callbacks: {
                                 label: function(context) {
                                     let label = context.dataset.label || ''; if (label) { label += ': '; }
@@ -302,7 +350,7 @@
                     }
                 }
             });
-            ctx.canvas.parentNode.style.height = '300px';
+            ctx.canvas.parentNode.style.height = '300px'; // Or adjust as needed
             ctx.canvas.parentNode.style.position = 'relative';
         };
 
@@ -394,18 +442,15 @@
 
         if ('serviceWorker' in navigator) {
           window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js') // Assuming sw.js is in the same directory
+            navigator.serviceWorker.register('./sw.js')
               .then(registration => {
                 console.log('ServiceWorker registration successful: ', registration.scope);
-                // Optional: Listen for updates to the service worker
                 registration.onupdatefound = () => {
                   const installingWorker = registration.installing;
                   if (installingWorker) {
                     installingWorker.onstatechange = () => {
                       if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        // New content is available; please refresh.
                         console.log('New service worker installed. Refresh to get updates.');
-                        // You could show a toast message to the user here.
                       }
                     };
                   }
